@@ -20,6 +20,7 @@ Options:
   --strict            Fail on parse warnings
   --tolerant          Continue on parse warnings (default)
   --no-pager          Disable automatic paging of output
+  --compliance        Score SBOM quality against NTIA, CISA, BSI TR-03183
   --to <format>       Target format for convert: cyclonedx (cdx), spdx, syft
   -o, --output <file> Output file for convert (default: stdout)
   --version, -v       Show version information

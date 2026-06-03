@@ -236,3 +236,21 @@ func TestParseArgs_NonConvertModeUnchanged(t *testing.T) {
 		t.Error("expected JSONOutput=true")
 	}
 }
+
+func TestParseArgs_ComplianceFlag(t *testing.T) {
+	args := []string{"sbomlyze", "a.json", "--compliance"}
+	opts := ParseArgs(args)
+
+	if !opts.Compliance {
+		t.Error("expected Compliance=true from --compliance flag")
+	}
+}
+
+func TestParseArgs_ComplianceDefault(t *testing.T) {
+	args := []string{"sbomlyze", "a.json"}
+	opts := ParseArgs(args)
+
+	if opts.Compliance {
+		t.Error("expected Compliance=false by default")
+	}
+}

@@ -25,6 +25,7 @@ func PrintUsage() {
 	fmt.Fprintf(os.Stderr, "  --strict            Fail on parse warnings\n")
 	fmt.Fprintf(os.Stderr, "  --tolerant          Continue on parse warnings (default)\n")
 	fmt.Fprintf(os.Stderr, "  --no-pager          Disable automatic paging of output\n")
+	fmt.Fprintf(os.Stderr, "  --compliance        Score SBOM quality against NTIA, CISA, BSI TR-03183\n")
 	fmt.Fprintf(os.Stderr, "  --to <format>       Target format for convert: cyclonedx (cdx), spdx, syft\n")
 	fmt.Fprintf(os.Stderr, "  -o, --output <file> Output file for convert (default: stdout)\n")
 	fmt.Fprintf(os.Stderr, "  --version, -v       Show version information\n")

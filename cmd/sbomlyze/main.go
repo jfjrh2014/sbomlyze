@@ -8,6 +8,7 @@ import (
 
 	"github.com/rezmoss/sbomlyze/internal/analysis"
 	"github.com/rezmoss/sbomlyze/internal/cli"
+	"github.com/rezmoss/sbomlyze/internal/compliance"
 	"github.com/rezmoss/sbomlyze/internal/convert"
 	"github.com/rezmoss/sbomlyze/internal/output"
 	"github.com/rezmoss/sbomlyze/internal/pager"
@@ -126,18 +127,26 @@ func main() {
 		p := pager.Start(opts.NoPager)
 		defer p.Stop()
 
+		var complianceReport *compliance.Report
+		if opts.Compliance {
+			r := compliance.Evaluate(comps, sbomInfo)
+			complianceReport = &r
+		}
+
 		switch opts.Format {
 		case "json":
 			out := struct {
-				Info     sbom.SBOMInfo        `json:"info"`
-				Findings analysis.KeyFindings  `json:"findings"`
-				Stats    analysis.Stats        `json:"stats"`
-				Warnings []cli.ParseWarning    `json:"warnings,omitempty"`
+				Info       sbom.SBOMInfo         `json:"info"`
+				Findings   analysis.KeyFindings   `json:"findings"`
+				Stats      analysis.Stats         `json:"stats"`
+				Compliance *compliance.Report      `json:"compliance,omitempty"`
+				Warnings   []cli.ParseWarning     `json:"warnings,omitempty"`
 			}{
-				Info:     sbomInfo,
-				Findings: findings,
-				Stats:    stats,
-				Warnings: parseOpts.Warnings,
+				Info:       sbomInfo,
+				Findings:   findings,
+				Stats:      stats,
+				Compliance: complianceReport,
+				Warnings:   parseOpts.Warnings,
 			}
 			enc := json.NewEncoder(os.Stdout)
 			enc.SetIndent("", "  ")
@@ -148,11 +157,17 @@ func main() {
 			}
 		case "html":
 			fmt.Println(output.GenerateHTMLStats(stats, sbomInfo, findings))
+			if complianceReport != nil {
+				compliance.PrintReport(*complianceReport)
+			}
 		default:
 			output.PrintSingleScanContext(sbomInfo)
 			output.PrintKeyFindings(findings)
 			analysis.PrintStats(stats)
 			cli.PrintWarnings(parseOpts.Warnings)
+			if complianceReport != nil {
+				compliance.PrintReport(*complianceReport)
+			}
 		}
 		return
 	}
@@ -210,6 +225,13 @@ func main() {
 
 	p := pager.Start(opts.NoPager)
 
+	var complianceReport *compliance.Report
+	if opts.Compliance {
+		// Evaluate compliance on the "after" SBOM (second file)
+		r := compliance.Evaluate(comps2, info2)
+		complianceReport = &r
+	}
+
 	switch opts.Format {
 	case "json":
 		out := struct {
@@ -217,12 +239,14 @@ func main() {
 			Findings   analysis.KeyFindings  `json:"findings"`
 			Diff       analysis.DiffResult   `json:"diff"`
 			Violations []policy.Violation    `json:"violations,omitempty"`
+			Compliance *compliance.Report    `json:"compliance,omitempty"`
 			Warnings   []cli.ParseWarning    `json:"warnings,omitempty"`
 		}{
 			Overview:   overview,
 			Findings:   findings,
 			Diff:       result,
 			Violations: violations,
+			Compliance: complianceReport,
 			Warnings:   parseOpts.Warnings,
 		}
 		enc := json.NewEncoder(os.Stdout)
@@ -277,6 +301,9 @@ func main() {
 		output.PrintTextDiff(result)
 		output.PrintViolations(violations)
 		cli.PrintWarnings(parseOpts.Warnings)
+		if complianceReport != nil {
+			compliance.PrintReport(*complianceReport)
+		}
 	}
 
 	p.Stop()
